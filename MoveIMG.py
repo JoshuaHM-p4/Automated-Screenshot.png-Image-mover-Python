@@ -1,58 +1,42 @@
-import os
-from os import rename 
-import shutil
 from time import sleep
+from glob import glob
+import os, shutil
 
-# image name and type to find, change for better options
-name_image = 'screenshot'
-file_types = ('.png','.jpeg','.jpg','.gif')
+name = 'screenshot'
+types = ('*.png','*.jpeg','*.jpg','*.gif')
 
-# source directory and destination, change for better options
-source = '/Users/Joshua/Desktop/'
-destination = '/Users/Joshua/Desktop/screenshots'
+destination = './screenshots'
 
-
-    
-# find file if contains 'screenshot' and file types (images). Constantly used throughout the code
 def img_file_exists():
-    return [file for file in os.listdir() if name_image in file.lower() if file.endswith(file_types)]
+    return [file for f_ in [glob(e) for e in types] for file in f_ if name in file.lower()]
 
-def move_file(file: str, renamed = False):
-    shutil.move(source+file, destination)
+def move_files(files: list):
+    for file in files:
+        print(f"Moving \"{file}\"...")
 
-    if not renamed:
-        print(f'Moved {file} to {destination}')
-    else:
-        print(f'Renamed it to {file} and moved to {destination}')
+        if not os.path.exists(destination+"/"+file):
+            shutil.move(file, destination)
+            print(f"Done!")
 
-
-# Finds a file that exists in the destination folder, renames it and moves to the destination if move_file() --> error
-def rename_file_move(img_file):
-    num_count = 0
-    old_img = img_file
-
-    # add an integer before "." for renaming
-    while img_file in os.listdir(destination):
-        
-        if '.jpeg' not in img_file:  # Check wheter it is .jpeg (-5 indexes) or not (.png or .jpg which is only -4 indexes)
-            img_file = f'{img_file[:-5]}{num_count}{img_file[-4:]}'
         else:
-            img_file = f'{img_file[:-6]}{num_count}{img_file[-5:]}'
-        num_count += 1
-        
-    os.rename(source+old_img,source+img_file)
+            base, extension = os.path.splitext(file)
+            
+            i = 1
+            while True:
+                new_file = base + "_" + str(i) + extension
+                if not os.path.exists(destination+"/"+new_file):
+                    os.rename(file, new_file)
+                    shutil.move(new_file, destination)
+                    print(f"Renamed \"({file}\" to {new_file}\nDone!")
+                    break
+                i += 1
 
-    move_file(img_file, renamed=True)
-        
-    
 def main():
-    while not img_file_exists():
-        sleep(1)
-    for file in img_file_exists():
-        try:
-            move_file(file)
-        except:
-            rename_file_move(file)
+    desktop = img_file_exists()
+    if not desktop:
+        sleep(10)
+    else:
+        move_files(desktop)
 
 if __name__ == "__main__":
     while True:
